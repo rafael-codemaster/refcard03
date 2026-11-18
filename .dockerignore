@@ -1,0 +1,13 @@
+target
+.git
+.github
+.idea
+.vscode
+*.iml
+docs
+docker
+scripts
+uploads
+*.md
+*.pem
+task-definition*.json
