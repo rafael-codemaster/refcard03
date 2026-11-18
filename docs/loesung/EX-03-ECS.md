@@ -49,12 +49,30 @@ flowchart LR
 
 ## Nachweise
 
+**ECR** (Konto `5427-1653-8015`): pro Commit ein Image mit kurzem und vollem SHA-Tag, das neueste zusätzlich `latest`:
+
 ![ECR mit SHA- und latest-Tags](../images/ex03-ecr.png)
+
+**RDS** `biztrips-backend-db` (MariaDB, db.t3.micro) verfügbar, mit aktiven Verbindungen der Tasks:
+
 ![RDS-Instanz verfügbar](../images/ex03-rds.png)
-![ECS-Service mit 2/2 Tasks](../images/ex03-ecs-service.png)
-![Target Group: 2 healthy Targets](../images/ex03-target-group.png)
-![Workflow deploy-ecs mit Zusammenfassung](../images/ex03-workflow-ecs.png)
+
+**ECS-Cluster**: 1 aktiver Service, 2 laufende Fargate-Tasks:
+
+![ECS-Cluster mit 2 laufenden Tasks](../images/ex03-ecs-cluster.png)
+
+**Target Group** hinter dem ALB: beide Tasks fehlerfrei (Health-Check `/actuator/health`):
+
+![Target Group: 2 fehlerfreie Ziele](../images/ex03-target-group.png)
+
+**Änderung → Wirkung** über `http://<ALB>/actuator/info`:
+
+Vorher, Commit `1dca71a`:
+
 ![Vor der Änderung](../images/ex03-change-before.png)
+
+Nach Änderung von `info.app.maintainer` und Push läuft automatisch Commit `2980736` (gleicher SHA wie das neue Image in ECR):
+
 ![Nach der Änderung (neuer Commit live)](../images/ex03-change-after.png)
 
 ## Reflexion

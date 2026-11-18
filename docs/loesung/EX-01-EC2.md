@@ -37,11 +37,25 @@
 
 ## Nachweise
 
-![Workflow-Run test → build → deploy](../images/ex01-workflow-run.png)
-![Environment production mit Secrets](../images/ex01-secrets.png)
+**EC2-Instanz `rafael-biztrips` läuft** (Public DNS `ec2-184-72-93-161.compute-1.amazonaws.com`):
+
 ![EC2-Instanz](../images/ex01-ec2-instance.png)
-![API auf EC2 erreichbar](../images/ex01-curl-health.png)
-![Commit-Historie](../images/ex01-commits.png)
+
+**Secrets im GitHub-Environment** (Werte verborgen):
+
+![Environment-Secrets](../images/ex01-secrets.png)
+
+**Workflow-Run grün: test → build → deploy**, Zusammenfassung mit dem deployten Commit `1dca71a`:
+
+![Workflow-Run test → build → deploy](../images/ex01-workflow-run.png)
+
+**REST-API auf EC2 erreichbar** (`/v1/trips` mit den Demo-Trips aus MariaDB):
+
+![GET /v1/trips auf EC2](../images/ex01-trips.png)
+
+**Health-Check** (`/actuator/health`, Datenbank `MariaDB` = `UP`):
+
+![GET /actuator/health auf EC2](../images/ex01-health.png)
 
 ## Reflexion
 

@@ -47,10 +47,13 @@ docker compose -f docker/docker-compose.yml --profile app up -d --build
 
 ## Nachweise
 
-![Lokaler Build mit drei Tags](../images/ex02-docker-build-local.png)
-![Container lokal gegen MariaDB](../images/ex02-container-local.png)
-![Tags auf Docker Hub](../images/ex02-dockerhub-tags.png)
+**Job „Image -> Docker Hub“ grün** (läuft nach dem EC2-Deploy, nur auf `main`):
+
 ![Job docker im Workflow](../images/ex02-docker-job.png)
+
+**Image auf Docker Hub** im Namespace `schnebalius`:
+
+![Repository biztrips-backend auf Docker Hub](../images/ex02-dockerhub.png)
 
 ## Reflexion
 

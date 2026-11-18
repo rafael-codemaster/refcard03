@@ -54,10 +54,9 @@ curl -o nachher.jpg http://localhost:8080/v1/employees/1/photo                  
 
 ## Nachweise
 
-![Upload und Download per curl](../images/ex04-upload-curl.png)
-![Foto im Browser](../images/ex04-browser-photo.png)
-![Foto überlebt Container-Neustart (Volume)](../images/ex04-volume.png)
-![Uploads auf EC2 nach Redeploy noch vorhanden](../images/ex04-ec2-uploads.png)
+**Validierung greift:** Eine als `.jpg` benannte Datei, die in Wirklichkeit ein PNG ist, wird mit `400` abgelehnt, weil die Magic Bytes nicht zum angegebenen Typ `image/jpeg` passen. Mit dem korrekten Typ (`foto.png;type=image/png`) antwortet der Endpoint mit `200`.
+
+![Upload mit falschem Content-Type wird abgelehnt](../images/ex04-validation.png)
 
 ## Warum das nicht 1:1 nach ECS/Fargate passt
 
