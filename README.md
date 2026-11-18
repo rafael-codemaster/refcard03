@@ -1,66 +1,54 @@
-# RefCard 03 – Spring Boot Backend + MariaDB
+# RefCard 03/04 – BusinessTrips Backend (Spring Boot + MariaDB)
 
-REST-API-Backend für die BusinessTrips-Applikation (Mitarbeitende, Business
-Trips, Flüge, Meetings). Teil der CI/CD-Übungssequenz **RefCard 02–05**
-(siehe [`docs/future/RefCard-03-RefCard-05-own-repos.md`](docs/future/RefCard-03-RefCard-05-own-repos.md))
-— dieses Repository ist **RefCard 03**: Spring Boot Backend mit MariaDB.
+[![CI/CD Backend](https://github.com/rafael-codemaster/refcard03/actions/workflows/deploy.yml/badge.svg)](https://github.com/rafael-codemaster/refcard03/actions/workflows/deploy.yml)
+
+REST-Backend der BusinessTrips-App (Mitarbeitende, Business Trips, Flüge, Meetings, Mitarbeiterfotos) mit CI/CD über GitHub Actions nach **AWS EC2**, **Docker Hub** und **AWS ECS (Fargate) + RDS**.
+Ausgangspunkt: [`bbwlc/RefCard-03-be-SpringBootBusinessTrips@v1-start`](https://github.com/bbwlc/RefCard-03-be-SpringBootBusinessTrips/tree/v1-start).
+
+**➡ Dokumentation der Lösung: [docs/loesung/README.md](docs/loesung/README.md)**
+
+| Übung | Ergebnis |
+|---|---|
+| [EX-01 – EC2](docs/loesung/EX-01-EC2.md) | Pipeline `test → build → deploy`, jar per rsync + systemd, Health-Check nach Deploy |
+| [EX-02 – Docker Hub](docs/loesung/EX-02-DockerHub.md) | Multi-Stage-`Dockerfile`, Tags `prod01`/`latest`/SHA/SemVer, Push nur von `main` |
+| [EX-03 – ECS](docs/loesung/EX-03-ECS.md) | ECR → ECS Fargate (2 Tasks) hinter ALB, MariaDB auf RDS, Rolling Deployment + Smoke-Test |
+| [EX-04 – Storage](docs/loesung/EX-04-Storage.md) | Foto-Upload/-Download, sichere Ablage, Docker-Volume, persistente Uploads auf EC2 |
 
 ## Tech-Stack
 
-- Java 21, Spring Boot 4.1 (Web, Data JPA)
-- MariaDB (lokal via Docker Compose) / H2 (Default, für Tests und schnellen lokalen Start)
-- Maven (Maven Wrapper, kein lokales Maven nötig)
+Java 21, Spring Boot 4.1 (Web, Data JPA, Actuator), MariaDB / H2, Maven Wrapper, Docker, GitHub Actions, AWS (EC2, ECR, ECS Fargate, RDS, ALB, Secrets Manager).
 
 ## Schnellstart
 
-### Ohne Datenbank-Setup (H2, Default)
-
 ```bash
-./mvnw spring-boot:run
-```
+./mvnw spring-boot:run                                    # H2 in-memory, Port 8080
+./mvnw test                                               # Tests
 
-Startet auf Port 8080 mit einer flüchtigen In-Memory-H2-Datenbank (Daten sind nach jedem Neustart weg, werden aber automatisch neu geseedet).
-
-### Mit MariaDB (persistent, wie in Produktion)
-
-```bash
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d         # nur MariaDB + phpMyAdmin (:8082)
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=mariadb
+
+docker compose -f docker/docker-compose.yml --profile app up -d --build   # DB + Backend als Container
 ```
 
-- MariaDB läuft dann auf `localhost:3306` (Datenbank `db_biztrips`, User `root`, Passwort `bbw123`)
-- phpMyAdmin ist unter [http://localhost:8082](http://localhost:8082) erreichbar (gleiche Zugangsdaten)
-- Die Demo-Daten werden nur beim allerersten Start eingefügt — ein Neustart der Applikation dupliziert sie nicht
-
-### Tests ausführen
-
-```bash
-./mvnw test
-```
-
-## API
-
-Basis-Pfad: `/v1`
+## API (Basis `/v1`)
 
 | Endpoint | Beschreibung |
-| --- | --- |
-| `GET /v1/trips`, `POST /v1/trips`, `GET /v1/trips/{id}`, `DELETE /v1/trips/{id}` | Business Trips |
-| `GET /v1/employees`, `POST /v1/employees`, `GET /v1/employees/{id}`, `PUT /v1/employees/{id}`, `DELETE /v1/employees/{id}`, `DELETE /v1/employees` | Mitarbeitende |
-| `GET /v1/flights`, `POST /v1/flights`, `GET /v1/flights/{id}`, `PUT /v1/flights/{id}`, `DELETE /v1/flights/{id}`, `DELETE /v1/flights` | Flüge |
-| `GET /v1/meetings`, `POST /v1/meetings`, `GET /v1/meetings/{id}`, `PUT /v1/meetings/{id}`, `DELETE /v1/meetings/{id}`, `DELETE /v1/meetings` | Meetings |
-| `POST /v1/signIn` | Login (Demo-User: `joe` / `1234`) |
-| `GET /actuator/health` | Health-Check (Spring Boot Actuator) — prüft u. a. die Datenbankverbindung |
+|---|---|
+| `GET/POST /v1/trips`, `GET/DELETE /v1/trips/{id}` | Business Trips |
+| `GET/POST/DELETE /v1/employees`, `GET/PUT/DELETE /v1/employees/{id}` | Mitarbeitende |
+| `POST/GET/DELETE /v1/employees/{id}/photo` | Mitarbeiterfoto (EX-04, PNG/JPEG/WebP, max. 5 MB) |
+| `/v1/flights`, `/v1/meetings` | Flüge, Meetings (CRUD) |
+| `POST /v1/signIn` | Login (Demo: `joe` / `1234`) |
+| `GET /actuator/health`, `GET /actuator/info` | Health inkl. DB, laufende Version (Commit-SHA) |
 
 ## Projektstruktur
 
 ```
-src/main/java/ch/bbw/trips/   Applikationscode (Controller, Entities, Repositories, DTOs)
-docker/docker-compose.yml     MariaDB + phpMyAdmin für die lokale Entwicklung
-docs/exercises/               CI/CD-Übungen (EX-01 EC2, EX-02 Docker Hub, EX-03 ECS/RDS)
-docs/reviews/                 Code-Reviews
-docs/future/                  Planungsentscheidungen für RefCard 03–05
+.github/workflows/deploy.yml   CI/CD: test → build → deploy (EC2) → docker (Hub) → deploy-ecs (ECR/ECS)
+Dockerfile, .dockerignore      Multi-Stage-Image (JDK-Build → JRE-alpine, non-root, Healthcheck)
+task-definition.json           ECS-Task-Definition mit Platzhaltern (werden in der Pipeline ersetzt)
+scripts/                       ec2-setup.sh, aws-ecs-setup.sh, aws-ecs-teardown.sh
+docker/docker-compose.yml      MariaDB + phpMyAdmin (+ Backend mit --profile app)
+src/main/java/ch/bbw/trips/    Applikation, storage/ = EX-04
+docs/loesung/                  Dokumentation der Übungen mit Screenshots
 ```
-
-## Für Studierende
-
-Der Tag [`v1-start`](../../releases/tag/v1-start) markiert den Ausgangspunkt für die Übungen in `docs/exercises/` — bewusst **ohne** `Dockerfile`, `.dockerignore`, `.github/workflows/deploy.yml` und `task-definition.json`, da ihr genau diese Dateien in EX-01/EX-02/EX-03 selbst erstellt.
