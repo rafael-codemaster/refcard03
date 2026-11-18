@@ -13,6 +13,7 @@ target/
 .springBeans
 .sts4-cache
 labsuser.pem
+*.pem
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -37,3 +38,9 @@ build/
 
 ### Docker Compose local MariaDB data (regenerated on `docker compose up`) ###
 docker/database/
+
+### EX-04: lokal hochgeladene Mitarbeiterfotos ###
+uploads/
+
+### Lokal gerenderte Task-Definition (enthält Account-spezifische Werte) ###
+task-definition.rendered.json
