@@ -1,0 +1,42 @@
+{
+  "family": "biztrips-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::__AWS_ACCOUNT_ID__:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "biztrips-backend",
+      "image": "__AWS_ACCOUNT_ID__.dkr.ecr.__AWS_REGION__.amazonaws.com/biztrips-backend:latest",
+      "portMappings": [{ "containerPort": 8080, "protocol": "tcp" }],
+      "essential": true,
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "mariadb" },
+        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:mariadb://__RDS_ENDPOINT__:3306/db_biztrips" },
+        { "name": "SPRING_DATASOURCE_USERNAME", "value": "admin" }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "__DB_SECRET_ARN__"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health > /dev/null || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 90
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/biztrips-backend",
+          "awslogs-region": "__AWS_REGION__",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
